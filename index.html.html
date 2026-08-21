@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오더문의</title>
+<meta name="description" content="잠옷·파자마, 셔츠·남방, 밴딩슬랙스 생산. 컬러·사이즈당 100장부터 오더 상담합니다.">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+/* ---------- 대표 인사말 ---------- */
+.letter{margin-top:28px;max-width:45ch}
+.letter-lead{font-size:clamp(20px,3.6vw,25px);font-weight:700;letter-spacing:-.03em;line-height:1.45}
+.letter p{margin-top:15px;font-size:15px;color:#3B4048;word-break:keep-all;line-height:1.75}
+.letter p.letter-close{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);
+  color:var(--ink);font-weight:700;font-size:16px;letter-spacing:-.02em}
+<style>
+/* ========================================================================
+   ▼▼▼ 여기 3줄만 바꾸면 내 공장 폼이 됩니다 ▼▼▼
+   BRAND      : 상단에 뜨는 브랜드/공장명
+   TAGLINE    : 그 옆 한 줄 소개
+   ENDPOINT   : 구글 Apps Script 웹앱 URL (apps-script.gs 파일 참고)
+                비워두면 '데모 모드'로 돌아갑니다 (접수는 안 되고 화면만 확인)
+   ======================================================================== */
+:root{
+  --ink:#16181D;        /* 본문 먹색 */
+  --paper:#FFFFFF;
+  --wash:#F5F6F8;       /* 섹션 배경 */
+  --line:#E4E6EA;       /* 괘선 */
+  --mute:#767D89;       /* 보조 텍스트 */
+  --accent:#1B3FD6;     /* 작업지시서 볼펜 파랑 */
+  --warn:#C2410C;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);background:var(--paper);color:var(--ink);
+  font-size:15px;line-height:1.65;letter-spacing:-.01em;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 20px}
+
+/* ---------- 헤더 ---------- */
+.top{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);z-index:40}
+.top-in{display:flex;align-items:baseline;gap:12px;padding:14px 0;flex-wrap:wrap}
+.logo{font-family:var(--mono);font-weight:600;font-size:14px;letter-spacing:.14em}
+.tagline{font-size:12.5px;color:var(--mute)}
+
+/* ---------- 히어로 ---------- */
+.hero{padding:56px 0 40px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--accent);margin-bottom:14px}
+h1{font-size:clamp(34px,7vw,56px);font-weight:800;letter-spacing:-.04em;line-height:1.05}
+.lede{margin-top:18px;max-width:46ch;color:#3B4048;font-size:15.5px}
+.terms{margin-top:26px;border-top:1px solid var(--line);padding-top:18px;display:grid;gap:10px;max-width:56ch}
+.term{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:13.5px;color:#3B4048}
+.term i{font-family:var(--mono);font-style:normal;color:var(--mute);font-size:11px;padding-top:3px}
+.term b{font-weight:700;color:var(--ink)}
+
+/* ---------- 2단 레이아웃 ---------- */
+.cols{display:grid;grid-template-columns:1fr 300px;gap:56px;align-items:start;padding-bottom:80px}
+@media(max-width:900px){.cols{grid-template-columns:1fr;gap:0;padding-bottom:140px}}
+
+/* ---------- 섹션 ---------- */
+.sec{border-top:1px solid var(--ink);padding:26px 0 34px}
+.sec-head{display:flex;align-items:baseline;gap:14px;margin-bottom:22px}
+.sec-num{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.1em}
+.sec-head h2{font-size:19px;font-weight:700;letter-spacing:-.02em}
+.sec-hint{font-size:12px;color:var(--mute);margin-left:auto}
+
+/* ---------- 필드 ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.f{display:flex;flex-direction:column;gap:7px}
+.f label{font-size:12.5px;font-weight:600;color:#3B4048}
+.f label em{font-style:normal;color:var(--accent);margin-left:3px}
+.f small{font-size:11.5px;color:var(--mute)}
+input[type=text],input[type=tel],input[type=number],input[type=date],select,textarea{
+  font-family:var(--sans);font-size:15px;color:var(--ink);
+  border:1px solid var(--line);border-radius:6px;padding:11px 12px;background:var(--paper);
+  width:100%;transition:border-color .12s,box-shadow .12s;
+}
+input[type=number]{font-family:var(--mono)}
+textarea{resize:vertical;min-height:78px;line-height:1.6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(27,63,214,.11)}
+input.bad,select.bad{border-color:var(--warn);background:#FFF7F4}
+select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4.5L6 8.5L10 4.5' stroke='%23767D89' stroke-width='1.4' fill='none' stroke-linecap='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+
+/* ---------- 칩(다중선택 / 단일선택) ---------- */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;width:0;height:0}
+.chip span{display:block;border:1px solid var(--line);border-radius:999px;padding:8px 15px;font-size:13.5px;cursor:pointer;user-select:none;transition:.12s}
+.chip span:hover{border-color:#B9BEC7}
+.chip input:checked+span{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+
+/* ---------- 수량 계산 ---------- */
+.calc{margin-top:20px;background:var(--wash);border:1px solid var(--line);border-radius:8px;padding:18px}
+.calc-row{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.calc-label{font-size:12.5px;font-weight:600;color:#3B4048}
+.calc-total{font-family:var(--mono);font-size:32px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.calc-expr{font-family:var(--mono);font-size:12px;color:var(--mute);margin-top:6px;letter-spacing:.02em}
+.calc.under{background:#FFF7F4;border-color:#F3C7B2}
+.calc-warn{display:none;margin-top:10px;font-size:12.5px;color:var(--warn);font-weight:600}
+.calc.under .calc-warn{display:block}
+
+/* ---------- 이미지 ---------- */
+.drop{border:1px dashed #C7CBD3;border-radius:8px;padding:26px 18px;text-align:center;cursor:pointer;transition:.12s;background:var(--paper)}
+.drop:hover,.drop.over{border-color:var(--accent);background:#F7F9FF}
+.drop b{display:block;font-size:14px;font-weight:600;margin-bottom:5px}
+.drop span{font-size:12px;color:var(--mute)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px;margin-top:12px}
+.thumb{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:1px solid var(--line);background:var(--wash)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb button{position:absolute;top:5px;right:5px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(22,24,29,.78);color:#fff;font-size:13px;line-height:1;cursor:pointer}
+
+/* ---------- 상세 접기 ---------- */
+details.more{margin-top:8px;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+details.more>summary{list-style:none;cursor:pointer;padding:15px 18px;background:var(--wash);font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:10px}
+details.more>summary::-webkit-details-marker{display:none}
+details.more>summary::before{content:'+';font-family:var(--mono);color:var(--accent);font-size:15px}
+details.more[open]>summary::before{content:'−'}
+details.more>summary i{font-style:normal;font-weight:400;color:var(--mute);font-size:12px;margin-left:auto}
+.more-body{padding:20px 18px;display:grid;gap:16px;border-top:1px solid var(--line)}
+
+/* ---------- 우측 요약 레일 (시그니처) ---------- */
+.rail{position:sticky;top:70px}
+.rail-card{border:1px solid var(--ink);border-radius:8px;overflow:hidden}
+.rail-head{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;padding:10px 16px;background:var(--ink);color:#fff}
+.rail-body{padding:16px}
+.rail-total{font-family:var(--mono);font-size:34px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1}
+.rail-total sub{font-family:var(--sans);font-size:13px;font-weight:600;color:var(--mute);margin-left:4px;vertical-align:baseline}
+.rail-expr{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:7px}
+.rail-list{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;display:grid;gap:9px}
+.rail-item{display:grid;grid-template-columns:58px 1fr;gap:10px;font-size:12.5px;align-items:baseline}
+.rail-item i{font-style:normal;color:var(--mute);font-family:var(--mono);font-size:10px;letter-spacing:.1em;padding-top:2px}
+.rail-item b{font-weight:600;word-break:keep-all}
+.rail-item b.empty{color:#B9BEC7;font-weight:400}
+@media(max-width:900px){.rail{display:none}}
+
+/* ---------- 모바일 하단 바 ---------- */
+.mobile-bar{display:none}
+@media(max-width:900px){
+  .mobile-bar{display:block;position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(255,255,255,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 20px calc(10px + env(safe-area-inset-bottom))}
+  .mobile-bar .mb-in{display:flex;align-items:center;gap:12px;max-width:1080px;margin:0 auto}
+  .mb-num{font-family:var(--mono);font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+  .mb-lab{font-size:11px;color:var(--mute);font-family:var(--mono);letter-spacing:.1em}
+  .mobile-bar .btn{margin-left:auto;width:auto;padding:12px 22px;font-size:14px}
+}
+
+/* ---------- 동의 / 제출 ---------- */
+.agree{display:flex;gap:11px;align-items:flex-start;padding:18px 0;font-size:13px;color:#3B4048;cursor:pointer}
+.agree input{width:18px;height:18px;margin-top:1px;accent-color:var(--accent);flex-shrink:0;cursor:pointer}
+.btn{width:100%;border:0;border-radius:7px;background:var(--ink);color:#fff;font-family:var(--sans);
+  font-size:15.5px;font-weight:700;padding:16px;cursor:pointer;transition:.14s;letter-spacing:-.01em}
+.btn:hover:not(:disabled){background:var(--accent)}
+.btn:disabled{background:#C7CBD3;cursor:not-allowed}
+.errbox{display:none;margin-top:12px;font-size:13px;color:var(--warn);font-weight:600}
+.errbox.on{display:block}
+
+/* ---------- 완료 화면 ---------- */
+.done{display:none;padding:80px 0 100px;text-align:center}
+.done.on{display:block}
+.done-mark{width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;margin:0 auto 26px;font-size:24px}
+.done h2{font-size:30px;font-weight:800;letter-spacing:-.03em}
+.done p{margin-top:12px;color:var(--mute);font-size:14.5px}
+.ticket{display:inline-block;margin:28px 0;font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:.1em;
+  border:1px solid var(--ink);border-radius:6px;padding:12px 22px}
+.done ul{list-style:none;max-width:38ch;margin:8px auto 0;text-align:left;display:grid;gap:9px;font-size:13px;color:#3B4048}
+.done li{display:grid;grid-template-columns:12px 1fr;gap:8px}
+.done li::before{content:'·';color:var(--accent);font-weight:700}
+
+.foot{border-top:1px solid var(--line);padding:22px 0 40px;font-size:11.5px;color:var(--mute);font-family:var(--mono);letter-spacing:.06em}
+
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hide{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap top-in">
+  <span class="logo" id="brandName">Y&J COMPANY</span>
+  <span class="tagline" id="brandTag">잠옷 · 셔츠 · 밴딩슬랙스 생산</span>
+</div></header>
+
+<main id="formView">
+<div class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">ORDER INQUIRY</div>
+    <h1>오더문의</h1>
+<div class="letter">
+  <div class="letter-lead">저도 셀러였습니다.</div>
+  <p>셀러가 바라는 건 하나입니다. 좋은 물건을 안전하게 받아 보는 것. 그 마음 그대로 중국에 직접 공장을 지었습니다.</p>
+  <p>문제가 생겼을 때 한국 사람과 바로 소통하고 풀 수 있다는 것, 한번 맡겨보시면 무엇이 다른지 아실 겁니다.</p>
+  <p class="letter-close">결국 좋은 곳에서 좋은 물건이 나옵니다.</p>
+</div>
+    <p class="lede">아래 항목만 남겨주시면 담당자가 1영업일 안에 연락드립니다. 자세한 작업지시는 상담하면서 같이 채웁니다.</p>
+    <div class="terms">
+      <div class="term"><i>01</i><div>최소 수량은 <b>컬러·사이즈당 100장</b>, <b>1컬러 1사이즈는 200장</b>부터입니다.</div></div>
+      <div class="term"><i>02</i><div>잠옷·셔츠·밴딩슬랙스가 주력입니다. 그 외 품목은 상담 후 안내드립니다.</div></div>
+      <div class="term"><i>03</i><div>상품 이미지가 있으면 견적이 가장 빠릅니다.</div></div>
+    </div>
+  </section>
+
+  <div class="cols">
+    <form id="orderForm" novalidate>
+
+      <!-- 01 연락처 -->
+      <section class="sec">
+        <div class="sec-head"><span class="sec-num">01</span><h2>연락처</h2></div>
+        <div class="grid g3">
+          <div class="f"><label for="brand">브랜드 · 회사명<em>*</em></label><input id="brand" name="brand" type="text" autocomplete="organization" required></div>
+          <div class="f"><label for="person">담당자<em>*</em></label><input id="person" name="person" type="text" autocomplete="name" required></div>
+          <div class="f"><label for="phone">연락처<em>*</em></label><input id="phone" name="phone" type="tel" inputmode="tel" placeholder="010-0000-0000" required></div>
+        </div>
+      </section>
+
+      <!-- 02 품목 -->
+      <section class="sec">
+        <div class="sec-head"><span class="sec-num">02</span><h2>품목</h2><span class="sec-hint">중복 선택 가능</span></div>
+        <div class="chips" id="itemChips">
+          <label class="chip"><input type="checkbox" name="item" value="잠옷·파자마"><span>잠옷·파자마</span></label>
+          <label class="chip"><input type="checkbox" name="item" value="잠옷원피스"><span>잠옷원피스</span></label>
+          <label class="chip"><input type="checkbox" name="item" value="셔츠·남방"><span>셔츠·남방</span></label>
+          <label class="chip"><input type="checkbox" name="item" value="밴딩슬랙스"><span>밴딩슬랙스</span></label>
+          <label class="chip"><input type="checkbox" name="item" value="반팔티"><span>반팔티</span></label>
+          <label class="chip"><input type="checkbox" name="item" value="기타"><span>기타</span></label>
+        </div>
+      </section>
+
+      <!-- 03 수량 -->
+      <section class="sec">
+        <div class="sec-head"><span class="sec-num">03</span><h2>수량</h2></div>
+        <div class="grid g2" style="grid-template-columns:repeat(4,1fr)">
+          <div class="f"><label for="styles">스타일 수</label><input id="styles" type="number" min="1" step="1" value="1"></div>
+          <div class="f"><label for="colors">컬러 수</label><input id="colors" type="number" min="1" step="1" value="1"></div>
+          <div class="f"><label for="sizes">사이즈 수</label><input id="sizes" type="number" min="1" step="1" value="1"></div>
+          <div class="f"><label for="perUnit">컬러·사이즈당<em>*</em></label><input id="perUnit" type="number" min="1" step="10" value="200"></div>
+        </div>
+        <div class="calc" id="calcBox">
+          <div class="calc-row">
+            <span class="calc-label">총 발주 수량</span>
+            <span class="calc-total" id="calcTotal">200장</span>
+          </div>
+          <div class="calc-expr" id="calcExpr">1 × 1 × 1 × 200</div>
+          <div class="calc-warn" id="calcWarn"></div>
+        </div>
+      </section>
+
+      <!-- 04 납기 · 이미지 -->
+      <section class="sec">
+        <div class="sec-head"><span class="sec-num">04</span><h2>납기 · 이미지</h2></div>
+        <div class="grid g2" style="margin-bottom:20px">
+          <div class="f"><label for="dueDate">최종 납기일<em>*</em></label><input id="dueDate" type="date" required></div>
+          <div class="f"><label for="targetPrice">희망 단가</label><input id="targetPrice" type="text" inputmode="numeric" placeholder="예: 12,000원"><small>정하지 않았다면 비워두셔도 됩니다.</small></div>
+        </div>
+        <div class="f">
+          <label>상품 이미지 <span style="font-weight:400;color:var(--mute)">최대 5장</span></label>
+          <div class="drop" id="drop" tabindex="0" role="button">
+            <b>이미지 선택하기</b>
+            <span>완성 이미지 · 도식화 · 레퍼런스 사진</span>
+          </div>
+          <input type="file" id="fileInput" accept="image/*" multiple class="hide">
+          <div class="thumbs" id="thumbs"></div>
+        </div>
+      </section>
+
+      <!-- 상세 (선택) -->
+      <details class="more">
+        <summary>작업지시 상세 입력 <i>선택 · 아는 항목만</i></summary>
+        <div class="more-body">
+          <div class="grid g2">
+            <div class="f"><label for="material">주원자재 · 부자재</label><textarea id="material" placeholder="예: 극세사 200g, 단추 12mm"></textarea></div>
+            <div class="f"><label for="detail">디테일 내용</label><textarea id="detail" placeholder="예: 삥줄, 와이드핏, 앞단추 5개"></textarea></div>
+            <div class="f"><label for="spec">사이즈 스펙</label><textarea id="spec" placeholder="총장 · 어깨 · 가슴 · 소매 등"></textarea></div>
+            <div class="f"><label for="sewing">부위별 봉제 · 가공</label><textarea id="sewing"></textarea></div>
+            <div class="f"><label for="packing">포장 명세</label><textarea id="packing" placeholder="OPP 개별포장 / 택 부착 여부 등"></textarea></div>
+            <div class="f"><label for="qc">QC 기준</label><textarea id="qc"></textarea></div>
+          </div>
+          <div class="f"><label>검사 방식</label>
+            <div class="chips">
+              <label class="chip"><input type="radio" name="inspect" value="자체검사"><span>자체검사</span></label>
+              <label class="chip"><input type="radio" name="inspect" value="외부검사"><span>외부검사</span></label>
+              <label class="chip"><input type="radio" name="inspect" value="공장 위임"><span>공장 위임</span></label>
+            </div>
+          </div>
+          <div class="grid g2">
+            <div class="f"><label for="fabric">원단 확정</label>
+              <select id="fabric">
+                <option value="">선택</option><option>확정</option><option>미확정</option><option>공장 소싱 요청</option>
+              </select></div>
+            <div class="f"><label for="assets">보유 자료</label>
+              <select id="assets">
+                <option value="">선택</option><option>실물 샘플</option><option>도식화·작업지시서</option><option>사진·이미지만</option><option>없음</option>
+              </select></div>
+          </div>
+          <div class="f"><label for="channel">판매 채널 · 현황</label><textarea id="channel" placeholder="예: 스마트스토어 / 도매 / 라이브커머스"></textarea></div>
+          <div class="f"><label for="etc">그 외 전달사항</label><textarea id="etc"></textarea></div>
+          <div class="f"><label for="address">회사 주소</label><input id="address" type="text"></div>
+        </div>
+      </details>
+
+      <!-- 동의 · 제출 -->
+      <label class="agree">
+        <input type="checkbox" id="agree">
+        <span>상담 회신을 위해 입력하신 정보와 첨부 이미지를 수집·이용하는 데 동의합니다.</span>
+      </label>
+      <button type="submit" class="btn" id="submitBtn">오더문의 보내기</button>
+      <div class="errbox" id="errBox"></div>
+    </form>
+
+    <!-- 시그니처: 실시간 오더 요약 -->
+    <aside class="rail">
+      <div class="rail-card">
+        <div class="rail-head">ORDER SHEET</div>
+        <div class="rail-body">
+          <div class="rail-total" id="railTotal">200<sub>장</sub></div>
+          <div class="rail-expr" id="railExpr">1 × 1 × 1 × 200</div>
+          <div class="rail-list">
+            <div class="rail-item"><i>ITEM</i><b class="empty" id="railItem">미선택</b></div>
+            <div class="rail-item"><i>DUE</i><b class="empty" id="railDue">미정</b></div>
+            <div class="rail-item"><i>PRICE</i><b class="empty" id="railPrice">미정</b></div>
+            <div class="rail-item"><i>IMG</i><b class="empty" id="railImg">0 / 5</b></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+</main>
+
+<!-- 완료 화면 -->
+<section class="done" id="doneView"><div class="wrap">
+  <div class="done-mark">✓</div>
+  <h2>접수됐습니다</h2>
+  <p>담당자가 1영업일 안에 연락드립니다.</p>
+  <div class="ticket" id="ticket">—</div>
+  <ul>
+    <li>접수번호를 기억해두시면 문의하실 때 빠릅니다.</li>
+    <li>상품 이미지와 사이즈 스펙이 준비되면 상담 때 함께 전달해주세요.</li>
+    <li>컬러·사이즈당 100장(1컬러 1사이즈는 200장) 미만은 진행이 어렵습니다.</li>
+  </ul>
+</div></section>
+
+<!-- 모바일 하단 바 -->
+<div class="mobile-bar" id="mobileBar"><div class="mb-in">
+  <div>
+    <div class="mb-lab">TOTAL</div>
+    <div class="mb-num" id="mbNum">200장</div>
+  </div>
+  <button type="button" class="btn" id="mbSubmit">문의 보내기</button>
+</div></div>
+
+<footer class="foot"><div class="wrap"><span id="footBrand">Y&J COMPANY</span> · ORDER INQUIRY</div></footer>
+
+<script>
+/* ===== 설정 ================================================ */
+const BRAND    = 'Y&J COMPNAY';
+const TAGLINE  = '잠옷 · 셔츠 · 밴딩슬랙스 생산';
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycby0SvtyGc5ZzKfi8WgEe1aao7vJAB6DTdortEh3NQfMByRt-UXQtahZ7ZbgLsM4GLyg/exec';   // ← 구글 Apps Script 웹앱 URL 붙여넣기 (비우면 데모 모드)
+const PREFIX   = 'DO'; // 접수번호 앞글자
+/* ============================================================ */
+
+brandName.textContent = footBrand.textContent = BRAND;
+brandTag.textContent  = TAGLINE;
+
+const $ = id => document.getElementById(id);
+const nf = n => n.toLocaleString('ko-KR');
+
+/* ---- 수량 계산 ---- */
+const qtyIds = ['styles','colors','sizes','perUnit'];
+function num(el, min=1){ const v = parseInt(el.value,10); return isNaN(v)||v<min ? min : v; }
+
+function updateCalc(){
+  const s = num($('styles')), c = num($('colors')), z = num($('sizes'));
+  const p = parseInt($('perUnit').value,10) || 0;
+  const minPer = (c === 1 && z === 1) ? 200 : 100;
+  const total = s * c * z * p;
+  const expr = `${s} × ${c} × ${z} × ${p}`;
+
+  $('calcTotal').textContent = nf(total) + '장';
+  $('calcExpr').textContent  = expr;
+  $('railTotal').innerHTML   = nf(total) + '<sub>장</sub>';
+  $('railExpr').textContent  = expr;
+  $('mbNum').textContent     = nf(total) + '장';
+
+  const under = p > 0 && p < minPer;
+  $('calcBox').classList.toggle('under', under);
+  $('calcWarn').textContent = under
+    ? `컬러·사이즈당 최소 ${minPer}장부터 진행됩니다. (현재 ${p}장)` : '';
+  return { total, expr, ok: p >= minPer, minPer };
+}
+qtyIds.forEach(id => $(id).addEventListener('input', () => {
+  if (['colors','sizes'].includes(id)) {
+    const auto = (num($('colors'))===1 && num($('sizes'))===1) ? 200 : 100;
+    if (!$('perUnit').dataset.touched) $('perUnit').value = auto;
+  }
+  updateCalc();
+}));
+$('perUnit').addEventListener('input', e => e.target.dataset.touched = '1');
+
+/* ---- 요약 레일 실시간 반영 ---- */
+function setRail(el, val, fallback){
+  const t = $(el); const has = val && String(val).trim();
+  t.textContent = has ? val : fallback;
+  t.classList.toggle('empty', !has);
+}
+function updateRail(){
+  const items = [...document.querySelectorAll('input[name=item]:checked')].map(i=>i.value);
+  setRail('railItem', items.join(', '), '미선택');
+  setRail('railDue', $('dueDate').value, '미정');
+  setRail('railPrice', $('targetPrice').value, '미정');
+  const t = $('railImg'); t.textContent = `${files.length} / 5`;
+  t.classList.toggle('empty', files.length === 0);
+}
+$('itemChips').addEventListener('change', updateRail);
+$('dueDate').addEventListener('change', updateRail);
+$('targetPrice').addEventListener('input', updateRail);
+
+/* ---- 이미지 (최대 5장, 자동 압축) ---- */
+let files = [];
+$('drop').addEventListener('click', () => $('fileInput').click());
+$('drop').addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' '){e.preventDefault();$('fileInput').click();} });
+$('drop').addEventListener('dragover', e => { e.preventDefault(); $('drop').classList.add('over'); });
+$('drop').addEventListener('dragleave', () => $('drop').classList.remove('over'));
+$('drop').addEventListener('drop', e => {
+  e.preventDefault(); $('drop').classList.remove('over');
+  addFiles([...e.dataTransfer.files].filter(f => f.type.startsWith('image/')));
+});
+$('fileInput').addEventListener('change', e => { addFiles([...e.target.files]); e.target.value=''; });
+
+async function addFiles(list){
+  for (const f of list){
+    if (files.length >= 5) break;
+    const dataUrl = await compress(f);
+    files.push({ name: f.name, dataUrl });
+  }
+  renderThumbs(); updateRail();
+}
+// 캔버스로 긴 변 1600px / JPEG 82% 로 줄여서 전송 (업로드 실패 방지)
+function compress(file, max=1600, q=.82){
+  return new Promise(res => {
+    const img = new Image();
+    img.onload = () => {
+      const r = Math.min(1, max/Math.max(img.width, img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width*r); cv.height = Math.round(img.height*r);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      res(cv.toDataURL('image/jpeg', q));
+      URL.revokeObjectURL(img.src);
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+function renderThumbs(){
+  $('thumbs').innerHTML = files.map((f,i)=>
+    `<div class="thumb"><img src="${f.dataUrl}" alt=""><button type="button" data-i="${i}" aria-label="삭제">×</button></div>`
+  ).join('');
+}
+$('thumbs').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  files.splice(+b.dataset.i, 1); renderThumbs(); updateRail();
+});
+
+/* ---- 접수번호 ---- */
+function makeTicket(){
+  const d = new Date(), p = n => String(n).padStart(2,'0');
+  return `${PREFIX}-${String(d.getFullYear()).slice(2)}${p(d.getMonth()+1)}${p(d.getDate())}-${String(Math.floor(Math.random()*9000)+1000)}`;
+}
+
+/* ---- 제출 ---- */
+$('mbSubmit').addEventListener('click', () => $('orderForm').requestSubmit());
+
+$('orderForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const errs = [];
+  document.querySelectorAll('.bad').forEach(el => el.classList.remove('bad'));
+
+  [['brand','브랜드·회사명'],['person','담당자'],['phone','연락처'],['dueDate','최종 납기일']].forEach(([id,label])=>{
+    if(!$(id).value.trim()){ $(id).classList.add('bad'); errs.push(label); }
+  });
+  const items = [...document.querySelectorAll('input[name=item]:checked')].map(i=>i.value);
+  if(!items.length) errs.push('품목');
+  const calc = updateCalc();
+  if(!calc.ok) errs.push(`컬러·사이즈당 최소 ${calc.minPer}장`);
+  if(!$('agree').checked) errs.push('개인정보 수집 동의');
+
+  const box = $('errBox');
+  if(errs.length){
+    box.textContent = errs.join(' · ') + ' 을(를) 확인해주세요.';
+    box.classList.add('on');
+    document.querySelector('.bad')?.scrollIntoView({behavior:'smooth',block:'center'});
+    return;
+  }
+  box.classList.remove('on');
+
+  const ticket = makeTicket();
+  const val = id => $(id).value.trim();
+  const payload = {
+    ticket, submittedAt: new Date().toISOString(),
+    brand: val('brand'), person: val('person'), phone: val('phone'),
+    items: items.join(', '),
+    styles: num($('styles')), colors: num($('colors')), sizes: num($('sizes')),
+    perUnit: parseInt($('perUnit').value,10), total: calc.total,
+    dueDate: val('dueDate'), targetPrice: val('targetPrice'),
+    material: val('material'), detail: val('detail'), spec: val('spec'),
+    sewing: val('sewing'), packing: val('packing'), qc: val('qc'),
+    inspect: document.querySelector('input[name=inspect]:checked')?.value || '',
+    fabric: val('fabric'), assets: val('assets'),
+    channel: val('channel'), etc: val('etc'), address: val('address'),
+    images: files
+  };
+
+  const btn = $('submitBtn');
+  btn.disabled = true; btn.textContent = '보내는 중…';
+
+  try{
+    if(ENDPOINT){
+      await fetch(ENDPOINT, {
+        method:'POST',
+        headers:{'Content-Type':'text/plain;charset=utf-8'}, // preflight 회피
+        body: JSON.stringify(payload)
+      });
+    }else{
+      console.log('[데모 모드] 전송될 데이터:', payload);
+      await new Promise(r=>setTimeout(r,600));
+    }
+    $('ticket').textContent = ticket;
+    $('formView').style.display = 'none';
+    $('mobileBar').style.display = 'none';
+    $('doneView').classList.add('on');
+    window.scrollTo({top:0,behavior:'instant'});
+  }catch(err){
+    console.error(err);
+    box.textContent = '전송에 실패했습니다. 네트워크를 확인하고 다시 눌러주세요.';
+    box.classList.add('on');
+    btn.disabled = false; btn.textContent = '오더문의 보내기';
+  }
+});
+
+/* 초기화 */
+$('dueDate').min = new Date().toISOString().slice(0,10);
+updateCalc(); updateRail();
+</script>
+</body>
+</html>
